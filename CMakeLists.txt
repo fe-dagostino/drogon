@@ -12,8 +12,11 @@ option(BUILD_SHARED_LIBS "Build drogon as a shared lib" OFF)
 option(BUILD_DOC "Build Doxygen documentation" OFF)
 option(BUILD_BROTLI "Build Brotli" ON)
 option(BUILD_YAML_CONFIG "Build yaml config" ON)
-option(USE_SUBMODULE "Use trantor as a submodule" ON)
+option(USE_FETCH_CONTENT "Download dependencies using FetchContent" ON)
 option(USE_STATIC_LIBS_ONLY "Use only static libraries as dependencies" OFF)
+
+# Update default path for .cmake files.
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(BUILD_POSTGRESQL "Build with postgresql support" ON "BUILD_ORM" OFF)
@@ -21,7 +24,7 @@ CMAKE_DEPENDENT_OPTION(LIBPQ_BATCH_MODE "Use batch mode for libpq" ON "BUILD_POS
 CMAKE_DEPENDENT_OPTION(BUILD_MYSQL "Build with mysql support" ON "BUILD_ORM" OFF)
 CMAKE_DEPENDENT_OPTION(BUILD_SQLITE "Build with sqlite3 support" ON "BUILD_ORM" OFF)
 CMAKE_DEPENDENT_OPTION(BUILD_REDIS "Build with redis support" ON "BUILD_ORM" OFF)
-CMAKE_DEPENDENT_OPTION(USE_SPDLOG "Allow using the spdlog logging library" OFF "USE_SUBMODULE" OFF)
+CMAKE_DEPENDENT_OPTION(USE_SPDLOG "Allow using the spdlog logging library" OFF "USE_FETCH_CONTENT" OFF)
 
 set(DROGON_MAJOR_VERSION 1)
 set(DROGON_MINOR_VERSION 9)
@@ -112,12 +115,7 @@ elseif (HAS_ANY AND HAS_STRING_VIEW AND HAS_COROUTINE)
 else ()
     set(DROGON_CXX_STANDARD 17)
 endif ()
-if(USE_SUBMODULE)
-    target_include_directories(
-            ${PROJECT_NAME}
-            PUBLIC
-            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/trantor>)
-endif()
+
 target_include_directories(
     ${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/lib/inc>
@@ -136,13 +134,15 @@ endif (WIN32)
 
 add_library(Drogon::Drogon ALIAS ${PROJECT_NAME})
 
-if(USE_SUBMODULE)
-add_subdirectory(trantor)
-target_link_libraries(${PROJECT_NAME} PUBLIC trantor)
-else()
+if(USE_FETCH_CONTENT)
+  include(FetchContent)
+  include(trantor)
+  include(jsoncpp)
+  include(yamlcpp)
+endif()
+
 find_package(Trantor CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Trantor::Trantor)
-endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Haiku")
     target_link_libraries(${PROJECT_NAME} PRIVATE network)

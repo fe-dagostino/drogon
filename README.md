@@ -210,7 +210,7 @@ Drogon provides some building options, you can enable or disable them by setting
 | BUILD_DOC | Build Doxygen documentation | OFF |
 | BUILD_BROTLI | Build Brotli | ON |
 | BUILD_YAML_CONFIG | Build yaml config | ON |
-| USE_SUBMODULE | Use trantor as a submodule | ON |
+| USE_FETCH_CONTENT | Enable/Disable shadow build for trantor | ON |
 
 
 ## Contributions
